@@ -1,6 +1,7 @@
 
 package com.sap.scimono.callback.users;
 
+import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
@@ -28,6 +29,7 @@ public interface UsersCallback {
    */
   User getUser(final String userId);
 
+
   /**
    * @param additionalAttributes additional attributes to be returned of excluded from the response
    * @return the user with the specified userId or null if no such user exists
@@ -37,11 +39,30 @@ public interface UsersCallback {
   }
 
   /**
+   * Get a user (more info in {@link UsersCallback#getUser(String, RequestedResourceAttributes)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   * @return the user with the specified userId or null if no such user exists
+   */
+  default User getUser(String userId, RequestedResourceAttributes additionalAttributes, Principal userPrincipal) {
+    return getUser(userId, additionalAttributes);
+  }
+  /**
    * @param additionalAttributes additional attributes to be returned of excluded from the response
    * @param filter               value of the filter query parameter
    * @return the user with the specified userId or null if no such user exists
    */
   default User getUser(String userId, RequestedResourceAttributes additionalAttributes, final String filter) {
+    return getUser(userId, additionalAttributes);
+  }
+
+  /**
+   * Get a user (more info in {@link UsersCallback#getUser(String, RequestedResourceAttributes)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   * @return the user with the specified userId or null if no such user exists
+   */
+  default User getUser(String userId, RequestedResourceAttributes additionalAttributes, final String filter, Principal userPrincipal) {
     return getUser(userId, additionalAttributes);
   }
 
@@ -55,6 +76,7 @@ public interface UsersCallback {
    */
   PagedResult<User> getUsers(final PageInfo pageInfo, final String filter);
 
+
   /**
    * Returns a page of users (more info in {@link UsersCallback#getUsers(PageInfo, String)} ()}
    * adding specifying additional attributes to be returned of excluded from the response
@@ -66,12 +88,30 @@ public interface UsersCallback {
   }
 
   /**
+   * Returns a page of users (more info in {@link UsersCallback#getUsers(PageInfo, String, RequestedResourceAttributes)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   * @return a page of users or empty page if no users match the filter/paging criteria
+   */
+  default PagedResult<User> getUsers(final PageInfo pageInfo, final String filter, RequestedResourceAttributes additionalAttributes, final Principal userPrincipal) {
+    return getUsers(pageInfo, filter, additionalAttributes);
+  }
+  /**
    * Creates a user with the provided attributes. The user object must have all mandatory attributes available,
    * including metadata (version, etc.). The returned user must have its id set.
    *
    * @param user
    */
   User createUser(final User user);
+
+  /**
+   * Creates a user with the provided attributes. (more info in {@link UsersCallback#createUser(User)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   */
+  default User createUser(final User user, final Principal userPrincipal){
+    return createUser(user);
+  }
 
   /**
    * +
@@ -81,6 +121,15 @@ public interface UsersCallback {
    * @param user
    */
   User updateUser(final User user);
+
+  /**
+   * Updates a user with the provided attributes. (more info in {@link UsersCallback#updateUser(User)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   */
+  default User updateUser(final User user, final Principal userPrincipal){
+    return updateUser(user);
+  }
 
   /**
    * Updates a user with the provided attributes. The user object must have all mandatory attributes available,
@@ -93,12 +142,28 @@ public interface UsersCallback {
   void patchUser(String userId, PatchBody patchBody, Meta userMeta);
 
   /**
+   * Updates a user with the provided attributes. (more info in {@link UsersCallback#patchUser(String, PatchBody, Meta)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   */
+  default void patchUser(String userId, PatchBody patchBody, Meta userMeta, final Principal userPrincipal){
+    patchUser(userId, patchBody, userMeta);
+  }
+  /**
    * Deletes the user with the specified userId.
    *
    * @param userId
    */
   void deleteUser(final String userId);
 
+  /**
+   * Updates a user with the provided attributes. (more info in {@link UsersCallback#deleteUser(String)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   */
+  default void deleteUser(String userId, final Principal userPrincipal){
+    deleteUser(userId);
+  }
   /**
    * Generates a user id for a new user
    *

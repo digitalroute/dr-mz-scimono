@@ -58,13 +58,13 @@ public class UsersTest {
   @Test(expected = InvalidInputException.class)
   public void testUpdateUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    users.updateUser(userId, null);
+    users.updateUser(userId, null, null);
   }
 
   @Test(expected = InvalidInputException.class)
   public void testPatchUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    users.patchUser(userId, null);
+    users.patchUser(userId, null, null);
   }
 
   @Test
@@ -87,7 +87,7 @@ public class UsersTest {
             .addOperation(patchOperation1)
             .setSchemas(schemas)
             .build();
-    users.patchUser(userId, patchBody);
+    users.patchUser(userId, patchBody, null);
 
     Mockito.verify(usersCallbackMock).patchUser(userIdCaptor.capture(), patchBodyCaptor.capture(), Mockito.any());
     Assert.assertEquals(userId, userIdCaptor.getValue());
@@ -115,7 +115,7 @@ public class UsersTest {
         .addOperation(patchOperation1)
         .setSchemas(schemas)
         .build();
-    users.patchUser(userId, patchBody);
+    users.patchUser(userId, patchBody, null);
   }
 
   @Test(expected = InvalidInputException.class)
@@ -140,7 +140,7 @@ public class UsersTest {
         .addOperation(patchOperation1)
         .setSchemas(schemas)
         .build();
-    users.patchUser(userId, patchBody);
+    users.patchUser(userId, patchBody, null);
   }
 
   private JsonNode getValueTrue() throws JsonProcessingException {

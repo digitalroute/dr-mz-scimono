@@ -18,6 +18,8 @@ import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.Mockito;
 
+import javax.ws.rs.core.SecurityContext;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -30,7 +32,7 @@ public class GroupsTest {
   private ObjectMapper mapper;
   private SchemasCallback schemasCallbackMock = Mockito.mock(SchemasCallback.class, Mockito.CALLS_REAL_METHODS);
   private GroupsCallback groupsCallback = Mockito.mock(GroupsCallback.class, Mockito.CALLS_REAL_METHODS);
-
+  private SecurityContext securityContext = Mockito.mock(SecurityContext.class);
   private final String PATCH_OP_SCHEMA = "urn:ietf:params:scim:api:messages:2.0:PatchOp";
 
   @Before
@@ -50,18 +52,21 @@ public class GroupsTest {
 
     };
     groups = new Groups(scimApplication, null);
+    Principal userPrincipal = Mockito.mock(Principal.class);
+    Mockito.doReturn("User1").when(userPrincipal).getName();
+    Mockito.doReturn(userPrincipal).when(securityContext).getUserPrincipal();
   }
 
   @Test(expected = InvalidInputException.class)
   public void testUpdateGroupWithEmptyBody() {
     String groupId = String.valueOf(UUID.randomUUID());
-    groups.updateGroup(groupId, null);
+    groups.updateGroup(groupId, null, securityContext);
   }
 
   @Test(expected = InvalidInputException.class)
   public void testPatchGroupWithEmptyBody() {
     String groupId = String.valueOf(UUID.randomUUID());
-    groups.patchGroup(groupId, null);
+    groups.patchGroup(groupId, null, securityContext);
   }
 
   @Test(expected = ResourceNotFoundException.class)
@@ -85,7 +90,7 @@ public class GroupsTest {
         .addOperation(patchOperation1)
         .setSchemas(schemas)
         .build();
-    groups.patchGroup(groupId, patchBody);
+    groups.patchGroup(groupId, patchBody, securityContext);
   }
 
   @Test(expected = InvalidInputException.class)
@@ -110,7 +115,7 @@ public class GroupsTest {
         .addOperation(patchOperation1)
         .setSchemas(schemas)
         .build();
-    groups.patchGroup(groupId, patchBody);
+    groups.patchGroup(groupId, patchBody, securityContext);
   }
 
 

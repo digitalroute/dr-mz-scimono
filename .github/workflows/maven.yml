@@ -1,7 +1,10 @@
 name: Java CI
 
 on: [push, pull_request]
-
+env:
+  ARTIFACTORY_USER: ${{ secrets.ARTIFACTORY_CLOUD_USER }}
+  ARTIFACTORY_PWD: ${{ secrets.ARTIFACTORY_CLOUD_PASSWORD }}
+  ARTIFACTORY_URL: "https://digitalroute.jfrog.io"
 jobs:
   build:
 
@@ -15,3 +18,14 @@ jobs:
         java-version: 1.8
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+    - name: Get version
+      id: get_version
+      run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+    - name: Upload scimono-client to Artifactory
+      working-directory: scimono-client
+      run: |
+        jf rt u --url=${ARTIFACTORY_URL}/artifactory --user=$ARTIFACTORY_USER --access-token=$ARTIFACTORY_PWD --flat=true target/scimono-client-${{ env.VERSION }}.jar DRX/com/sap/scimono/scimono-client/${{ env.VERSION }}/
+    - name: Upload scimono-server sources to Artifactory
+      working-directory: scimono-server
+      run: |
+        jf rt u --url=${ARTIFACTORY_URL}/artifactory --user=$ARTIFACTORY_USER --access-token=$ARTIFACTORY_PWD --flat=true target/scimono-server-${{ env.VERSION }}-sources.jar DRX/com/sap/scimono/scimono-server/${{ env.VERSION }}/

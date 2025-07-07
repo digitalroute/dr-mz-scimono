@@ -13,17 +13,19 @@ import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.Mockito;
 
-import javax.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.SecurityContext;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class GroupsTest {
 
@@ -35,7 +37,7 @@ public class GroupsTest {
   private SecurityContext securityContext = Mockito.mock(SecurityContext.class);
   private final String PATCH_OP_SCHEMA = "urn:ietf:params:scim:api:messages:2.0:PatchOp";
 
-  @Before
+  @BeforeEach
   public void setup() {
     mapper = new ObjectMapper();
     SCIMApplication scimApplication = new SCIMApplication() {
@@ -57,19 +59,20 @@ public class GroupsTest {
     Mockito.doReturn(userPrincipal).when(securityContext).getUserPrincipal();
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   public void testUpdateGroupWithEmptyBody() {
     String groupId = String.valueOf(UUID.randomUUID());
-    groups.updateGroup(groupId, null, securityContext);
+    assertThrows(InvalidInputException.class, () -> groups.updateGroup(groupId, null, securityContext));
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   public void testPatchGroupWithEmptyBody() {
     String groupId = String.valueOf(UUID.randomUUID());
-    groups.patchGroup(groupId, null, securityContext);
+    assertThrows(InvalidInputException.class, () -> groups.patchGroup(groupId, null, securityContext));
+
   }
 
-  @Test(expected = ResourceNotFoundException.class)
+  @Test
   @DisplayName("Test patch group with non existing resource and remove operation on a not removable attribute. The existence of the resource given in the path should be validated first. Expected ResourceNotFoundException (404).")
   public void testPatchGroupNonExistingResource() throws JsonProcessingException {
     Mockito.doNothing().when(groupsCallback).patchGroup(Mockito.any(), Mockito.any(), Mockito.any());
@@ -90,10 +93,11 @@ public class GroupsTest {
         .addOperation(patchOperation1)
         .setSchemas(schemas)
         .build();
-    groups.patchGroup(groupId, patchBody, securityContext);
+    assertThrows(ResourceNotFoundException.class, () -> groups.patchGroup(groupId, patchBody, securityContext));
+
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   @DisplayName("Test patch group with existing resource and remove operation on a not removable attribute. Expected InvalidInputException (400) since this is not allowed.")
   public void testPatchGroupExistingResource() throws JsonProcessingException {
     Mockito.doNothing().when(groupsCallback).patchGroup(Mockito.any(), Mockito.any(), Mockito.any());
@@ -115,7 +119,7 @@ public class GroupsTest {
         .addOperation(patchOperation1)
         .setSchemas(schemas)
         .build();
-    groups.patchGroup(groupId, patchBody, securityContext);
+    assertThrows(InvalidInputException.class, () -> groups.patchGroup(groupId, patchBody, securityContext));
   }
 
 

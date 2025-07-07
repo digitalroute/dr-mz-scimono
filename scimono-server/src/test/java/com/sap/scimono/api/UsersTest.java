@@ -1,13 +1,14 @@
 package com.sap.scimono.api;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import jakarta.ws.rs.core.SecurityContext;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -25,6 +26,9 @@ import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class UsersTest {
 
   private Users users;
@@ -32,12 +36,13 @@ public class UsersTest {
   private ObjectMapper mapper;
   private SchemasCallback schemasCallbackMock = Mockito.mock(SchemasCallback.class, Mockito.CALLS_REAL_METHODS);
   private UsersCallback usersCallbackMock = Mockito.mock(UsersCallback.class, Mockito.CALLS_REAL_METHODS);
+  private SecurityContext securityContext = Mockito.mock(SecurityContext.class);
 
   ArgumentCaptor<String> userIdCaptor = ArgumentCaptor.forClass(String.class);
   ArgumentCaptor<PatchBody> patchBodyCaptor = ArgumentCaptor.forClass(PatchBody.class);
   private final String PATCH_OP_SCHEMA = "urn:ietf:params:scim:api:messages:2.0:PatchOp";
 
-  @Before
+  @BeforeEach
   public void setup() {
     mapper = new ObjectMapper();
     SCIMApplication scimApplication = new SCIMApplication() {
@@ -53,18 +58,21 @@ public class UsersTest {
       }
     };
     users = new Users(scimApplication, null);
+    Principal userPrincipal = Mockito.mock(Principal.class);
+    Mockito.doReturn("User1").when(userPrincipal).getName();
+    Mockito.doReturn(userPrincipal).when(securityContext).getUserPrincipal();
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   public void testUpdateUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    users.updateUser(userId, null, null);
+    assertThrows(InvalidInputException.class, () -> users.updateUser(userId, null, null));
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   public void testPatchUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    users.patchUser(userId, null, null);
+    assertThrows(InvalidInputException.class, () -> users.patchUser(userId, null, null));
   }
 
   @Test
@@ -87,14 +95,14 @@ public class UsersTest {
             .addOperation(patchOperation1)
             .setSchemas(schemas)
             .build();
-    users.patchUser(userId, patchBody, null);
+    users.patchUser(userId, patchBody, securityContext);
 
     Mockito.verify(usersCallbackMock).patchUser(userIdCaptor.capture(), patchBodyCaptor.capture(), Mockito.any());
-    Assert.assertEquals(userId, userIdCaptor.getValue());
-    Assert.assertEquals(patchBody, patchBodyCaptor.getValue());
+    assertEquals(patchBody, patchBodyCaptor.getValue());
+    assertEquals(userId, userIdCaptor.getValue());
   }
 
-  @Test(expected = ResourceNotFoundException.class)
+  @Test
   @DisplayName("Test patch user with non existing resource and remove operation on a not removable attribute. The existence of the resource given in the path should be validated first. Expected ResourceNotFoundException (404).")
   public void testPatchUserNonExistingResource() throws JsonProcessingException {
     Mockito.doNothing().when(usersCallbackMock).patchUser(Mockito.any(), Mockito.any(), Mockito.any());
@@ -115,10 +123,10 @@ public class UsersTest {
         .addOperation(patchOperation1)
         .setSchemas(schemas)
         .build();
-    users.patchUser(userId, patchBody, null);
+    assertThrows(ResourceNotFoundException.class, () -> users.patchUser(userId, patchBody, securityContext));
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   @DisplayName("Test patch user with existing resource and remove operation on a not removable attribute. Expected InvalidInputException (400) since this is not allowed.")
   public void testPatchUserExistingResource() throws JsonProcessingException {
     Mockito.doNothing().when(usersCallbackMock).patchUser(Mockito.any(), Mockito.any(), Mockito.any());
@@ -140,7 +148,7 @@ public class UsersTest {
         .addOperation(patchOperation1)
         .setSchemas(schemas)
         .build();
-    users.patchUser(userId, patchBody, null);
+    assertThrows(InvalidInputException.class, () -> users.patchUser(userId, patchBody, securityContext));
   }
 
   private JsonNode getValueTrue() throws JsonProcessingException {

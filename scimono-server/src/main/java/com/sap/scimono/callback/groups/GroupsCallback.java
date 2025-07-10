@@ -59,7 +59,7 @@ public interface GroupsCallback {
   }
 
   default Group getGroup(String groupId, RequestedResourceAttributes additionalAttributes, String filter, Principal userPrincipal) {
-    return getGroup(groupId, additionalAttributes);
+    return getGroup(groupId, additionalAttributes, userPrincipal);
   }
 
   /**

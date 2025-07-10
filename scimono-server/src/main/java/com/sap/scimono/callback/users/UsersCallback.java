@@ -63,7 +63,7 @@ public interface UsersCallback {
    * @return the user with the specified userId or null if no such user exists
    */
   default User getUser(String userId, RequestedResourceAttributes additionalAttributes, final String filter, Principal userPrincipal) {
-    return getUser(userId, additionalAttributes);
+    return getUser(userId, additionalAttributes, userPrincipal);
   }
 
   /**
